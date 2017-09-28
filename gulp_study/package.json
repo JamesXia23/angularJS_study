@@ -1,0 +1,17 @@
+{
+  "name": "gulp_study",
+  "version": "1.0.0",
+  "description": "",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "author": "",
+  "license": "ISC",
+  "devDependencies": {
+    "browser-sync": "^2.18.13",
+    "extjs": "^0.1.0",
+    "gulp": "^3.9.1"
+  },
+  "dependencies": {}
+}

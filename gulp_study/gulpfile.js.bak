@@ -1,0 +1,113 @@
+/** npm install gulp  gulp-concat gulp-clean-css gulp-fontmin  gulp-uglify gulp-clean gulp-rename run-sequence gulp-htmlmin browser-sync --save-dev **/
+
+var gulp = require('gulp');
+var concat = require('gulp-concat'); //合并文件
+var cleanCss = require('gulp-clean-css'); //压缩css
+var fontmin = require('gulp-fontmin');
+var uglify = require('gulp-uglify'); // 压缩 代码
+var clean = require('gulp-clean');
+var rename = require('gulp-rename');
+var runSequence = require('run-sequence');
+var htmlmin = require('gulp-htmlmin');
+var browserSync = require("browser-sync").create() // 自动刷新
+
+var path = {
+      dist:'./dist',
+
+      fontSrcPath:'./src/css/themes/**/*.*',
+      cssSrcPath:'./src/css/**.css',
+      jsSrcPath:'./src/js/**/*.js',
+      libSrcPath:'./src/lib/*.js',
+      htmlSrcPath:'./src/**/*.html',
+
+      fontDistPath:'./dist/css/themes/',
+      cssDistPath:'./dist/css/',
+      jsDistPath:'./dist/js/',
+      libDistPath:'./dist/lib/',
+      htmlDistPath:'./dist/',
+};
+
+
+/*清空文件夹*/
+gulp.task('clean',function(){
+      return gulp.src(path.dist,{read: false})
+           .pipe(clean());
+});
+
+gulp.task('css', function() {
+  return gulp.src(path.cssSrcPath)
+    .pipe(concat('all.min.css'))
+    .pipe(cleanCss({compatibility: 'ie8'}))
+    .pipe(gulp.dest(path.cssDistPath));
+});
+
+gulp.task('font', function () {
+    return gulp.src(path.fontSrcPath)
+        .pipe(fontmin())
+        .pipe(gulp.dest(path.fontDistPath));
+});
+
+//压缩js代码
+gulp.task('js', function() {
+    return gulp.src(path.jsSrcPath)
+        .pipe(concat('all.min.js')) // 拼接成 一个js
+        .pipe(uglify()) //压缩 js代码
+        .pipe(gulp.dest(path.jsDistPath)) //输出到指定目录
+});
+
+gulp.task('jsLib', function() {
+  return gulp.src(path.libSrcPath)
+  .pipe(rename({suffix:'.min'}))
+  .pipe(uglify())
+  .pipe(gulp.dest(path.libDistPath));
+});
+
+gulp.task('html', function () {
+    var options = {
+        removeComments: true,
+        collapseWhitespace: true,
+        collapseBooleanAttributes: true,
+        removeEmptyAttributes: true,
+        removeScriptTypeAttributes: true,
+        removeStyleLinkTypeAttributes: true,
+        minifyJS: true,
+        minifyCSS: true
+    };
+    gulp.src(path.htmlSrcPath)
+        .pipe(htmlmin(options))
+        .pipe(gulp.dest(path.htmlDistPath));
+});
+
+
+//gulp运行的时候
+gulp.task("default", ['server']);
+gulp.task('watch',['watch:css','watch:js','watch:html']);
+gulp.task("init", ['css','font', 'js','jsLib', 'html']);
+
+gulp.task('server', ["init","watch"], function() {
+    browserSync.init({
+        server: {
+            baseDir: ["src"]
+        },
+        port: 80
+    });
+});
+
+
+//监听css
+gulp.task("watch:css", function() {
+    gulp.watch(path.cssSrcPath,['css'], browserSync.reload);
+});
+//监听js
+gulp.task("watch:js", function() {
+    gulp.watch(path.jsSrcPath,['js'], browserSync.reload);
+});
+//监听html
+gulp.task("watch:html", function() {
+    gulp.watch(path.htmlSrcPath,['html'], browserSync.reload);
+});
+
+//构建生产
+gulp.task('build', function () {
+  runSequence('clean',['css','font', 'js','jsLib', 'html']);
+});
